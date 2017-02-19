@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Builder", func() {
-	var subject Builder
+	var subject *Builder
 
 	BeforeEach(func() {
 		subject = New()
