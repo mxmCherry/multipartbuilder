@@ -34,8 +34,8 @@ var _ = Describe("Builder", func() {
 		It("should write fields", func() {
 			subject.WriteField("field_name", "FIELD_VALUE")
 			subject.WriteFields(map[string][]string{
-				"field_1": []string{"FIELD_1_VALUE_1"},
-				"field_2": []string{"FIELD_2_VALUE_1", "FIELD_2_VALUE_2"},
+				"field_1": {"FIELD_1_VALUE_1"},
+				"field_2": {"FIELD_2_VALUE_1", "FIELD_2_VALUE_2"},
 			})
 
 			_, bodyReader, err := subject.Build()
