@@ -48,6 +48,7 @@ type Builder interface {
 	BuildRequest(method string, url string) (*http.Request, error)
 }
 
+// New constructs new multipart Builder.
 func New() Builder {
 	body := bytes.NewBuffer(nil)
 	return &builder{
