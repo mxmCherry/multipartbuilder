@@ -20,7 +20,7 @@
 //   resp, err := http.Post("https://test.com/", contentType, bodyReader)
 //
 // Or build request right away:
-//   req, err := BuildRequest("POST", "https://test.com/")
+//   req, err := builder.BuildRequest("POST", "https://test.com/")
 //   if err != nil {
 //     panic(err.Error()) // handle error somehow
 //   }
