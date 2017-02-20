@@ -1,31 +1,26 @@
-// Package multipartbuilder provides multipart reader builder.
+// Package multipartbuilder provides multipart builder.
 //
 // Usage:
-//   builder := multipartbuilder.New().
-//     WriteField("field", "value").
-//     WriteField("field", "another value").
-//     WriteFields(map[string][]string{
-//       "field":         []string{"even", "more", "values"},
-//       "another_field": []string{"another value"},
-//     }).
-//     SlurpReader("reader", "file.bin", strings.NewReader("foo bar")).
-//     SlurpFile("file", "path/to/file.bin").
-//   builder.WriteField("or", "don't use chaining, doesn't matter")
 //
-// Then, you may either get Content-Type and body reader:
-//   contentType, bodyReader, err := builder.Build()
-//   if err != nil {
-//     panic(err.Error()) // handle error somehow
-//   }
+//   builder := New()
+//   builder.AddField("field", "value")
+//
+//   // or use chaining:
+//   builder.
+//     AddReader("reader", strings.NewReader("Some reader")).
+//     AddFile("file", "path/to/file.bin")
+//
+//   // finalize builder (it should not be used anymore after this);
+//   // any errors will be returned on bodyReader.Read():
+//   contentType, bodyReader := builder.Build()
+//
+//   // for proper cleanup, returned bodyReader should be used at least once,
+//   // so at least close it (multiple closes are fine):
+//   defer bodyReader.Close()
+//
+//   // finally, use built reader:
 //   resp, err := http.Post("https://test.com/", contentType, bodyReader)
-//
-// Or build request right away:
-//   req, err := builder.BuildRequest("POST", "https://test.com/")
 //   if err != nil {
-//     panic(err.Error()) // handle error somehow
+//     // handle error
 //   }
-//   // modify request, if needed:
-//   req.AddCookie(...)
-//   // and, finally, execute it:
-//   resp, err := http.DefaultClient.Do(req)
 package multipartbuilder

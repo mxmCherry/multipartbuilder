@@ -3,6 +3,8 @@ package multipartbuilder_test
 import (
 	"io"
 	"io/ioutil"
+	"mime"
+	"mime/multipart"
 	"strings"
 
 	. "github.com/mxmCherry/multipartbuilder"
@@ -20,104 +22,88 @@ var _ = Describe("Builder", func() {
 
 	Context("fields", func() {
 
-		It("should write field", func() {
-			subject.WriteField("field_name", "FIELD_VALUE")
+		It("should add single field", func() {
+			subject.AddField("field_name", "FIELD_VALUE")
 
-			_, bodyReader, err := subject.Build()
-			Expect(err).NotTo(HaveOccurred())
+			form := readForm(subject.Build())
 
-			body := read(bodyReader)
-			Expect(body).To(ContainSubstring("field_name"))
-			Expect(body).To(ContainSubstring("FIELD_VALUE"))
-		})
-
-		It("should write fields", func() {
-			subject.WriteField("field_name", "FIELD_VALUE")
-			subject.WriteFields(map[string][]string{
-				"field_1": {"FIELD_1_VALUE_1"},
-				"field_2": {"FIELD_2_VALUE_1", "FIELD_2_VALUE_2"},
-			})
-
-			_, bodyReader, err := subject.Build()
-			Expect(err).NotTo(HaveOccurred())
-
-			body := read(bodyReader)
-			Expect(body).To(ContainSubstring("field_1"))
-			Expect(body).To(ContainSubstring("FIELD_1_VALUE_1"))
-			Expect(body).To(ContainSubstring("field_2"))
-			Expect(body).To(ContainSubstring("FIELD_2_VALUE_1"))
-			Expect(body).To(ContainSubstring("FIELD_2_VALUE_2"))
+			Expect(form.Value).To(Equal(map[string][]string{
+				"field_name": {"FIELD_VALUE"},
+			}))
 		})
 
 	}) // fields context
 
-	Context("slurping", func() {
+	Context("readers", func() {
 
-		It("should slurp reader", func() {
-			subject.SlurpReader("field_name", "file.bin", strings.NewReader("READER_CONTENTS"))
+		It("should add reader", func() {
+			subject.AddReader("field_name", "file.bin", strings.NewReader("READER_CONTENTS"))
 
-			_, bodyReader, err := subject.Build()
-			Expect(err).NotTo(HaveOccurred())
+			form := readForm(subject.Build())
 
-			body := read(bodyReader)
-			Expect(body).To(ContainSubstring("field_name"))
-			Expect(body).To(ContainSubstring("file.bin"))
-			Expect(body).To(ContainSubstring("READER_CONTENTS"))
+			Expect(form.File).To(HaveKey("field_name"))
+			Expect(form.File["field_name"]).To(HaveLen(1))
+
+			fileHeader := form.File["field_name"][0]
+			Expect(fileHeader).NotTo(BeNil())
+			Expect(fileHeader.Filename).To(Equal("file.bin"))
+
+			Expect(read(fileHeader)).To(Equal("READER_CONTENTS"))
 		})
 
-		It("should slurp file", func() {
-			subject.SlurpFile("field_name", "testdata/file.txt")
+	}) // readers context
 
-			_, bodyReader, err := subject.Build()
-			Expect(err).NotTo(HaveOccurred())
+	Context("files", func() {
 
-			body := read(bodyReader)
-			Expect(body).To(ContainSubstring("field_name"))
-			Expect(body).To(ContainSubstring("file.txt"))
-			Expect(body).To(ContainSubstring("FILE_TXT_CONTENTS\n"))
+		It("should add file", func() {
+			subject.AddFile("field_name", "testdata/file.txt")
+
+			form := readForm(subject.Build())
+
+			Expect(form.File).To(HaveKey("field_name"))
+			Expect(form.File["field_name"]).To(HaveLen(1))
+
+			fileHeader := form.File["field_name"][0]
+			Expect(fileHeader).NotTo(BeNil())
+			Expect(fileHeader.Filename).To(Equal("file.txt"))
+
+			Expect(read(fileHeader)).To(Equal("FILE_TXT_CONTENTS\n"))
 		})
 
-	}) // slurping context
+	}) // files context
 
 	Context("errors", func() {
 
 		It("should report errors", func() {
-			subject.SlurpFile("file1", "testdata/inexisting.txt")
-			subject.SlurpFile("file2", "testdata/inexisting.bin")
+			subject.AddFile("file1", "testdata/inexisting.txt")
 
-			contentType, bodyReader, err := subject.Build()
-			Expect(err).To(HaveOccurred())
-			Expect(contentType).To(BeEmpty())
-			Expect(bodyReader).To(BeNil())
+			_, reader := subject.Build()
 
-			Expect(err.Error()).To(ContainSubstring("multipartbuilder: failed to open file testdata/inexisting.txt for field file1"))
-			Expect(err.Error()).To(ContainSubstring("multipartbuilder: failed to open file testdata/inexisting.bin for field file2"))
+			_, err := ioutil.ReadAll(reader)
+			Expect(err.Error()).To(ContainSubstring("multipartbuilder: failed to open file file1 (testdata/inexisting.txt)"))
 		})
 
 	}) // errors context
 
-	Context("request", func() {
-
-		It("should build HTTP request", func() {
-			subject.WriteField("field_name", "FIELD_VALUE")
-
-			req, err := subject.BuildRequest("POST", "https://test.com/")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(req.Method).To(Equal("POST"))
-			Expect(req.URL.String()).To(Equal("https://test.com/"))
-			Expect(req.Header.Get("Content-Type")).To(ContainSubstring("multipart"))
-
-			body := read(req.Body)
-			Expect(body).To(ContainSubstring("field_name"))
-			Expect(body).To(ContainSubstring("FIELD_VALUE"))
-		})
-
-	}) // request context
-
 })
 
-func read(r io.Reader) string {
+func readForm(ctype string, r io.Reader) *multipart.Form {
+	const maxMemory = 1024 * 1024
+
+	mediaType, params, err := mime.ParseMediaType(ctype)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(strings.HasPrefix(mediaType, "multipart/"))
+
+	mr := multipart.NewReader(r, params["boundary"])
+	form, err := mr.ReadForm(maxMemory)
+	Expect(err).NotTo(HaveOccurred())
+	return form
+}
+
+func read(fh *multipart.FileHeader) string {
+	r, err := fh.Open()
+	Expect(err).NotTo(HaveOccurred())
+
 	b, err := ioutil.ReadAll(r)
 	Expect(err).NotTo(HaveOccurred())
 	return string(b)

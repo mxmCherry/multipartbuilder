@@ -1,41 +1,29 @@
 # multipartbuilder [![GoDoc](https://godoc.org/github.com/mxmCherry/multipartbuilder?status.svg)](https://godoc.org/github.com/mxmCherry/multipartbuilder) [![Build Status](https://travis-ci.org/mxmCherry/multipartbuilder.svg?branch=master)](https://travis-ci.org/mxmCherry/multipartbuilder) [![Go Report Card](https://goreportcard.com/badge/github.com/mxmCherry/multipartbuilder)](https://goreportcard.com/report/github.com/mxmCherry/multipartbuilder)
 
-Simple HTTP multipart request builder for Go (Golang)
+Simple HTTP multipart builder for Go (Golang)
 
 # Usage
 
 ```go
-builder := multipartbuilder.New().
-	WriteField("field", "value").
-	WriteField("field", "another value").
-	WriteFields(map[string][]string{
-		"field":         []string{"even", "more", "values"},
-		"another_field": []string{"another value"},
-	}).
-	SlurpReader("reader", "file.bin", strings.NewReader("foo bar")).
-	SlurpFile("file", "path/to/file.bin").
-builder.WriteField("or", "don't use chaining, doesn't matter")
-```
+	builder := New()
+	builder.AddField("field", "value")
 
-Then, you may either get Content-Type and body reader:
+	// or use chaining:
+	builder.
+		AddReader("reader", strings.NewReader("Some reader")).
+		AddFile("file", "path/to/file.bin")
 
-```go
-	contentType, bodyReader, err := builder.Build()
-	if err != nil {
-		panic(err.Error()) // handle error somehow
-	}
+	// finalize builder (it should not be used anymore after this);
+	// any errors will be returned on bodyReader.Read():
+	contentType, bodyReader := builder.Build()
+
+	// for proper cleanup, returned bodyReader should be used at least once,
+	// so at least close it (multiple closes are fine):
+	defer bodyReader.Close()
+
+	// finally, use built reader:
 	resp, err := http.Post("https://test.com/", contentType, bodyReader)
-```
-
-Or build request right away:
-
-```go
-	req, err := builder.BuildRequest("POST", "https://test.com/")
 	if err != nil {
-		panic(err.Error()) // handle error somehow
+		// handle error
 	}
-	// modify request, if needed:
-	req.AddCookie(...)
-	// and, finally, execute it:
-	resp, err := http.DefaultClient.Do(req)
 ```
