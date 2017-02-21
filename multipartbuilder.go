@@ -11,7 +11,7 @@
 //     AddFile("file", "path/to/file.bin")
 //
 //   // finalize builder (it should not be used anymore after this);
-//   // any errors will be returned on bodyReader.Read():
+//   // any errors will be returned on bodyReader usage (Read/Close):
 //   contentType, bodyReader := builder.Build()
 //
 //   // for proper cleanup, returned bodyReader should be used at least once,

@@ -33,14 +33,17 @@ func (b *Builder) AddField(fieldName, value string) *Builder {
 // AddReader adds multipart file field from provided reader.
 func (b *Builder) AddReader(fieldName, fileName string, reader io.Reader) *Builder {
 	b.cbs = append(b.cbs, func(mw *multipart.Writer) error {
+
 		w, err := mw.CreateFormFile(fieldName, fileName)
 		if err != nil {
 			return fmt.Errorf("multipartbuilder: failed to create form file %s (%s) for reader: %s", fieldName, fileName, err.Error())
 		}
+
 		_, err = io.Copy(w, reader)
 		if err != nil {
 			return fmt.Errorf("multipartbuilder: failed to copy form file %s (%s) for reader: %s", fieldName, fileName, err.Error())
 		}
+
 		return nil
 	})
 	return b
@@ -49,19 +52,23 @@ func (b *Builder) AddReader(fieldName, fileName string, reader io.Reader) *Build
 // AddFile adds multipart file field from specified file path.
 func (b *Builder) AddFile(fieldName, filePath string) *Builder {
 	b.cbs = append(b.cbs, func(mw *multipart.Writer) error {
+
 		f, err := os.Open(filePath)
 		if err != nil {
 			return fmt.Errorf("multipartbuilder: failed to open file %s (%s): %s", fieldName, filePath, err.Error())
 		}
 		defer f.Close()
+
 		w, err := mw.CreateFormFile(fieldName, filepath.Base(filePath))
 		if err != nil {
 			return fmt.Errorf("multipartbuilder: failed to create form file %s (%s): %s", fieldName, filePath, err.Error())
 		}
+
 		_, err = io.Copy(w, f)
 		if err != nil {
 			return fmt.Errorf("multipartbuilder: failed to copy form file %s (%s): %s", fieldName, filePath, err.Error())
 		}
+
 		return nil
 	})
 	return b
@@ -69,8 +76,8 @@ func (b *Builder) AddFile(fieldName, filePath string) *Builder {
 
 // Build finalizes Builder, returning Content-Type and multipart reader.
 // It should be called only once for Builder.
-// Returned reader should be read at least once to clean up properly.
-// Any errors are bound to returned reader (so will be returned on .Read()).
+// Returned reader should be used (Read/Close) at least once to clean up properly.
+// Any errors are bound to returned reader (will be returned on Read/Close).
 func (b *Builder) Build() (string, io.ReadCloser) {
 	r, w := io.Pipe()
 	mw := multipart.NewWriter(w)
