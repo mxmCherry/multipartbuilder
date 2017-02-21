@@ -2,7 +2,7 @@
 //
 // Usage:
 //
-//   builder := New()
+//   builder := multipartbuilder.New()
 //   builder.AddField("field", "value")
 //
 //   // or use chaining:

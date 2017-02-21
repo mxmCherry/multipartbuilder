@@ -4,8 +4,16 @@ Simple streaming multipart builder for Go (Golang).
 
 # Usage
 
+```bash
+go get -u github.com/mxmCherry/multipartbuilder
+```
+
 ```go
-	builder := New()
+import "github.com/mxmCherry/multipartbuilder"
+```
+
+```go
+	builder := multipartbuilder.New()
 	builder.AddField("field", "value")
 
 	// or use chaining:
