@@ -1,4 +1,4 @@
-// Package multipartbuilder provides multipart builder.
+// Package multipartbuilder provides simple streaming multipart builder.
 //
 // Usage:
 //
