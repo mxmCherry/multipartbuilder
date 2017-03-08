@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestHttpmprqb(t *testing.T) {
+func TestMultipartbuilder(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Multipartbuilder Suite")
 }
