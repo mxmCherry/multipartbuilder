@@ -1,4 +1,8 @@
-# multipartbuilder [![GoDoc](https://godoc.org/github.com/mxmCherry/multipartbuilder?status.svg)](https://godoc.org/github.com/mxmCherry/multipartbuilder) [![Build Status](https://travis-ci.org/mxmCherry/multipartbuilder.svg?branch=master)](https://travis-ci.org/mxmCherry/multipartbuilder) [![Go Report Card](https://goreportcard.com/badge/github.com/mxmCherry/multipartbuilder)](https://goreportcard.com/report/github.com/mxmCherry/multipartbuilder)
+# multipartbuilder
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/mxmCherry/multipartbuilder.svg)](https://pkg.go.dev/github.com/mxmCherry/multipartbuilder)
+[![Go Test](https://github.com/mxmCherry/multipartbuilder/actions/workflows/go.yml/badge.svg)](https://github.com/mxmCherry/multipartbuilder/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mxmCherry/multipartbuilder)](https://goreportcard.com/report/github.com/mxmCherry/multipartbuilder)
 
 Simple streaming multipart builder for Go (Golang).
 
