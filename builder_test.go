@@ -2,14 +2,13 @@ package multipartbuilder_test
 
 import (
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"strings"
 
 	. "github.com/mxmCherry/multipartbuilder"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -79,7 +78,7 @@ var _ = Describe("Builder", func() {
 
 			_, reader := subject.Build()
 
-			_, err := ioutil.ReadAll(reader)
+			_, err := io.ReadAll(reader)
 			Expect(err.Error()).To(ContainSubstring("multipartbuilder: failed to open file file1 (testdata/inexisting.txt)"))
 		})
 
@@ -104,7 +103,7 @@ func read(fh *multipart.FileHeader) string {
 	r, err := fh.Open()
 	Expect(err).NotTo(HaveOccurred())
 
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	Expect(err).NotTo(HaveOccurred())
 	return string(b)
 }
